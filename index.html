@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juristream</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+          .animate-modalShow {
+            animation: modalShow 0.3s forwards;
+          }
+        }
+        @keyframes modalShow {
+          0% {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        /* Define custom theme colors for Tailwind JIT */
+        body {
+            --color-main-bg: #FFFFFF; /* White */
+            --color-card-bg: #ffffff; /* white */
+            --color-text-primary: #1D1D1F; /* Dark Graphite */
+            --color-text-secondary: #71717a; /* zinc-500 (Medium Gray) - Kept as neutral secondary */
+            --color-accent: #007AFF; /* Vibrant Blue */
+            --color-border-color: #d4d4d8; /* zinc-300 (Light Gray Border) - Kept as neutral border */
+            --color-input-focus-border: #007AFF; /* Vibrant Blue for focus */
+        }
+        .bg-main-bg { background-color: var(--color-main-bg); }
+        .bg-card-bg { background-color: var(--color-card-bg); }
+        .text-text-primary { color: var(--color-text-primary); }
+        .text-text-secondary { color: var(--color-text-secondary); }
+        .text-accent { color: var(--color-accent); }
+        .bg-accent { background-color: var(--color-accent); }
+        .border-border-color { border-color: var(--color-border-color); }
+        .ring-accent { --tw-ring-color: var(--color-accent); }
+        .hover\:text-accent:hover { color: var(--color-accent); }
+        .focus\:ring-custom-brown:focus { --tw-ring-color: var(--color-accent); } /* custom-brown will use the new accent */
+        .focus\:border-custom-brown:focus { border-color: var(--color-input-focus-border); } /* custom-brown border will use new focus border */
+
+        /* Specific classes for new palette (custom-brown now maps to the new accent) */
+        .bg-custom-brown { background-color: var(--color-accent); }
+        .text-custom-brown { color: var(--color-accent); }
+
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'main-bg': 'var(--color-main-bg)',
+              'card-bg': 'var(--color-card-bg)',
+              'text-primary': 'var(--color-text-primary)',
+              'text-secondary': 'var(--color-text-secondary)',
+              'accent': 'var(--color-accent)', // New Blue
+              'custom-brown': 'var(--color-accent)', // Mapped to new blue, as ACCENT_COLOR constant uses "custom-brown"
+              'border-color': 'var(--color-border-color)',
+              'input-focus-border': 'var(--color-input-focus-border)',
+            },
+            animation: {
+              modalShow: 'modalShow 0.3s forwards',
+            },
+            keyframes: {
+              modalShow: {
+                '0%': { opacity: '0', transform: 'scale(0.95)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              },
+            },
+          },
+        },
+      }
+    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.2",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react-hot-toast": "https://esm.sh/react-hot-toast@^2.5.2",
+    "uuid": "https://esm.sh/uuid@^11.1.0",
+    "recharts": "https://esm.sh/recharts@^3.0.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.400.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-main-bg">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
