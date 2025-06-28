@@ -10,8 +10,8 @@ const AIChatMessage: React.FC<{ message: AIChatMessageType }> = ({ message }) =>
       <div
         className={`max-w-3/4 p-3 rounded-lg shadow ${
           isUser
-            ? 'bg-accent text-white'
-            : 'bg-slate-200 text-text-primary'
+            ? 'bg-blue-600 text-white'
+            : 'bg-slate-200 text-slate-800'
         }`}
       >
         {!isUser && (

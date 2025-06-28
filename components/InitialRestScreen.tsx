@@ -2,32 +2,31 @@ import React from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { APP_NAME } from '../constants';
 
-interface RestScreenProps {
-  onWakeUp: () => void;
-  message?: string;
+interface InitialRestScreenProps {
+  onProceed: () => void;
 }
 
-const RestScreen: React.FC<RestScreenProps> = ({ onWakeUp, message = "Clique para voltar" }) => {
+const InitialRestScreen: React.FC<InitialRestScreenProps> = ({ onProceed }) => {
   const { settings } = useAppData();
   
-  const bgColor = '#FFFFFF'; // Default to white
+  const bgColor = settings.splashScreenBackgroundColor || '#FFFFFF';
 
   return (
     <div
       style={{ backgroundColor: bgColor }}
       className="fixed inset-0 flex flex-col items-center justify-center z-[100] cursor-pointer"
-      onClick={onWakeUp}
+      onClick={onProceed}
     >
       <div className="animate-pulse">
         {settings.customLogo ? (
           <img src={settings.customLogo} alt={`${APP_NAME} Logo`} className="h-24 max-h-48 max-w-xs object-contain" />
         ) : (
-          <h1 className="text-7xl font-bold text-blue-600">{APP_NAME}</h1>
+          <h1 className="text-7xl font-bold text-accent">{APP_NAME}</h1>
         )}
       </div>
-       <p className="text-slate-500 mt-8 animate-pulse text-lg">{message}</p>
+       <p className="text-text-secondary mt-8 animate-pulse text-lg">Clique para entrar</p>
     </div>
   );
 };
 
-export default RestScreen;
+export default InitialRestScreen;

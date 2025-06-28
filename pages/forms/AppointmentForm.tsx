@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppData } from '../../hooks/useAppData';
 import { Appointment, AppointmentType } from '../../types';
 import toast from 'react-hot-toast';
+import { CalendarIcon } from '../../constants';
 
 interface AppointmentFormProps {
     onSuccess: () => void;
@@ -10,7 +11,7 @@ interface AppointmentFormProps {
 }
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmentToEdit, selectedDate }) => {
-    const { addAppointment, updateAppointment, cases, clients } = useAppData();
+    const { addAppointment, updateAppointment, cases, clients, settings } = useAppData();
     
     const [title, setTitle] = useState('');
     const [appointmentType, setAppointmentType] = useState<AppointmentType>(AppointmentType.REUNIAO);
@@ -20,6 +21,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmen
     const [notes, setNotes] = useState('');
     const [caseId, setCaseId] = useState<string | undefined>(undefined);
     const [clientId, setClientId] = useState<string | undefined>(undefined);
+    const [createCalendarEvent, setCreateCalendarEvent] = useState(false);
 
     useEffect(() => {
         if (appointmentToEdit) {
@@ -32,6 +34,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmen
             setNotes(appointmentToEdit.notes || '');
             setCaseId(appointmentToEdit.caseId);
             setClientId(appointmentToEdit.clientId);
+            setCreateCalendarEvent(appointmentToEdit.createCalendarEvent || false);
         } else if (selectedDate) {
             setTitle('');
             setAppointmentType(AppointmentType.REUNIAO);
@@ -41,6 +44,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmen
             setNotes('');
             setCaseId(undefined);
             setClientId(undefined);
+            setCreateCalendarEvent(false);
         }
     }, [appointmentToEdit, selectedDate]);
 
@@ -53,7 +57,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmen
 
         const [hours, minutes] = time.split(':');
         const finalDate = new Date(date);
-        finalDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+        finalDate.setUTCHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
         const appointmentData = {
             title,
@@ -63,6 +67,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmen
             notes: notes || undefined,
             caseId: caseId || undefined,
             clientId: clientId || undefined,
+            createCalendarEvent,
         };
 
         if(appointmentToEdit) {
@@ -72,6 +77,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmen
             addAppointment(appointmentData);
             toast.success("Compromisso adicionado!");
         }
+        
+        if (createCalendarEvent && settings.googleCalendarConnected) {
+            toast('Compromisso sendo sincronizado com Google Calendar (simulado).', { icon: '🗓️' });
+        } else if (createCalendarEvent && !settings.googleCalendarConnected) {
+            toast.error('Conecte ao Google Calendar na Agenda para sincronizar eventos.');
+        }
+
         onSuccess();
     };
     
@@ -128,6 +140,19 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSuccess, appointmen
             <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Anotações (Opcional)</label>
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className={commonInputClass} />
+            </div>
+
+            <div className="flex items-center space-x-2 mt-2">
+                <input
+                type="checkbox"
+                id="createCalendarEvent"
+                checked={createCalendarEvent}
+                onChange={(e) => setCreateCalendarEvent(e.target.checked)}
+                className="h-4 w-4 text-accent border-border-color rounded focus:ring-accent"
+                />
+                <label htmlFor="createCalendarEvent" className="text-sm font-medium text-text-secondary flex items-center">
+                    <CalendarIcon size={16} className="mr-1 text-accent" /> Adicionar ao Google Calendar
+                </label>
             </div>
 
             <div className="flex justify-end pt-2">

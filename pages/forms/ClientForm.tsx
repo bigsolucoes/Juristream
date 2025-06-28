@@ -83,28 +83,28 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSuccess, clientToEdit }) => {
     onSuccess();
   };
   
-  const commonInputClass = "w-full p-2 border border-border-color rounded-md focus:ring-2 focus:ring-custom-brown focus:border-custom-brown text-text-primary outline-none transition-shadow bg-card-bg";
+  const commonInputClass = "w-full p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-slate-800 outline-none transition-shadow bg-white";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="clientName" className="block text-sm font-medium text-text-secondary mb-1">Nome <span className="text-red-500">*</span></label>
+        <label htmlFor="clientName" className="block text-sm font-medium text-slate-500 mb-1">Nome <span className="text-red-500">*</span></label>
         <input type="text" id="clientName" value={name} onChange={(e) => setName(e.target.value)} className={commonInputClass} required />
       </div>
       <div>
-        <label htmlFor="company" className="block text-sm font-medium text-text-secondary mb-1">Empresa (Opcional)</label>
+        <label htmlFor="company" className="block text-sm font-medium text-slate-500 mb-1">Empresa (Opcional)</label>
         <input type="text" id="company" value={company} onChange={(e) => setCompany(e.target.value)} className={commonInputClass} />
       </div>
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1">Email <span className="text-red-500">*</span></label>
+        <label htmlFor="email" className="block text-sm font-medium text-slate-500 mb-1">Email <span className="text-red-500">*</span></label>
         <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={commonInputClass} required />
       </div>
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-text-secondary mb-1">Telefone (Opcional)</label>
+        <label htmlFor="phone" className="block text-sm font-medium text-slate-500 mb-1">Telefone (Opcional)</label>
         <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className={commonInputClass} />
       </div>
       <div>
-        <label htmlFor="cpf" className="block text-sm font-medium text-text-secondary mb-1">CPF/CNPJ (Opcional)</label>
+        <label htmlFor="cpf" className="block text-sm font-medium text-slate-500 mb-1">CPF/CNPJ (Opcional)</label>
         <input 
           type="text" 
           id="cpf" 
@@ -116,7 +116,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSuccess, clientToEdit }) => {
         />
       </div>
       <div>
-        <label htmlFor="observations" className="block text-sm font-medium text-text-secondary mb-1">Observações (Opcional)</label>
+        <label htmlFor="observations" className="block text-sm font-medium text-slate-500 mb-1">Observações (Opcional)</label>
         <textarea 
           id="observations" 
           value={observations} 
@@ -127,7 +127,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSuccess, clientToEdit }) => {
         />
       </div>
       <div className="flex justify-end pt-2">
-        <button type="submit" className="bg-accent text-white px-6 py-2 rounded-lg shadow hover:brightness-90 transition-all">
+        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition-all">
           {clientToEdit ? 'Salvar Alterações' : 'Adicionar Cliente'}
         </button>
       </div>

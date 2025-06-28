@@ -9,12 +9,12 @@ interface BrandingSplashScreenProps {
 const BrandingSplashScreen: React.FC<BrandingSplashScreenProps> = ({ isFadingOut }) => {
   const { settings, loading: settingsLoading } = useAppData();
 
-  // Wait for settings if not available, especially for custom colors/logo
-  if (settingsLoading && !settings.splashScreenBackgroundColor && !settings.customLogo) { 
+  // Wait for settings if not available, especially for custom logo
+  if (settingsLoading && !settings.customLogo) { 
     return null; 
   }
   
-  const bgColor = settings.splashScreenBackgroundColor || '#111827'; // Default dark slate if not set
+  const bgColor = '#FFFFFF'; // Default white background
 
   return (
     <div
@@ -26,8 +26,7 @@ const BrandingSplashScreen: React.FC<BrandingSplashScreenProps> = ({ isFadingOut
       {settings.customLogo ? (
         <img src={settings.customLogo} alt={`${APP_NAME} Logo`} className="h-24 max-h-48 max-w-xs object-contain animate-pulse" />
       ) : (
-        // Use text-accent for the text logo, it will pick up the user's chosen accent color
-        <h1 className={`text-7xl font-bold text-accent animate-pulse`}>{APP_NAME}</h1>
+        <h1 className={`text-7xl font-bold text-blue-600 animate-pulse`}>{APP_NAME}</h1>
       )}
     </div>
   );

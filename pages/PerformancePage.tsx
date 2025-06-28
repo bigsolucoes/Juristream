@@ -7,8 +7,8 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCurrency } from '../utils/formatters';
 
 const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-card-bg p-6 rounded-xl shadow-lg">
-    <h2 className="text-xl font-semibold text-text-primary mb-4">{title}</h2>
+  <div className="bg-white p-6 rounded-xl shadow-lg">
+    <h2 className="text-xl font-semibold text-slate-800 mb-4">{title}</h2>
     <div className="h-72 md:h-96"> {/* Fixed height for chart containers */}
       {children}
     </div>
@@ -17,9 +17,9 @@ const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ tit
 
 const KPICard: React.FC<{ title: string; value: string | number; unit?: string; isCurrency?: boolean; privacyModeEnabled?: boolean }> = 
   ({ title, value, unit, isCurrency = false, privacyModeEnabled = false }) => (
-  <div className="bg-card-bg p-6 rounded-xl shadow-lg text-center">
-    <h3 className="text-md font-medium text-text-secondary mb-1">{title}</h3>
-    <p className="text-3xl font-bold text-accent">
+  <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+    <h3 className="text-md font-medium text-slate-500 mb-1">{title}</h3>
+    <p className="text-3xl font-bold text-blue-600">
       {isCurrency 
         ? formatCurrency(typeof value === 'number' ? value : parseFloat(value.toString()), privacyModeEnabled, unit || 'R$') 
         : (typeof value === 'number' ? value.toLocaleString('pt-BR', {minimumFractionDigits: unit === 'dias' ? 0 : 0 , maximumFractionDigits: unit === 'dias' ? 0 : 1}) : value)
@@ -37,7 +37,7 @@ const PerformancePage: React.FC = () => {
     return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
   }
   const privacyMode = settings.privacyModeEnabled || false;
-  const accentColor = settings.accentColor || '#007AFF'; 
+  const accentColor = '#2563eb'; // blue-600
   const activeJobs = jobs.filter(job => !job.isDeleted); // Use non-deleted jobs for performance metrics
 
   // Faturamento Mensal (últimos 12 meses)
@@ -128,7 +128,7 @@ const PerformancePage: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-text-primary mb-6">Painel de Desempenho</h1>
+      <h1 className="text-3xl font-bold text-slate-800 mb-6">Painel de Desempenho</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <KPICard title="Valor Médio por Projeto (Pago)" value={averageJobValue} isCurrency={true} privacyModeEnabled={privacyMode} unit="R$" />
@@ -148,7 +148,7 @@ const PerformancePage: React.FC = () => {
                 <Bar dataKey="Receita" fill={accentColor} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          ) : <p className="text-text-secondary text-center pt-10">Dados insuficientes.</p>}
+          ) : <p className="text-slate-500 text-center pt-10">Dados insuficientes.</p>}
         </ChartCard>
 
         <ChartCard title="Projetos Concluídos (Pagos) por Mês">
@@ -163,7 +163,7 @@ const PerformancePage: React.FC = () => {
                 <Bar dataKey="Quantidade" fill="#22c55e" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          ) : <p className="text-text-secondary text-center pt-10">Dados insuficientes.</p>}
+          ) : <p className="text-slate-500 text-center pt-10">Dados insuficientes.</p>}
         </ChartCard>
 
         <ChartCard title="Top 5 Clientes (por Receita)">
@@ -187,7 +187,7 @@ const PerformancePage: React.FC = () => {
                 <Legend wrapperStyle={{fontSize: "14px"}}/>
               </PieChart>
             </ResponsiveContainer>
-           ) : <p className="text-text-secondary text-center pt-10">Dados insuficientes.</p>}
+           ) : <p className="text-slate-500 text-center pt-10">Dados insuficientes.</p>}
         </ChartCard>
 
         <ChartCard title="Receita por Tipo de Serviço">
@@ -206,7 +206,7 @@ const PerformancePage: React.FC = () => {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          ): <p className="text-text-secondary text-center pt-10">Dados insuficientes.</p>}
+          ): <p className="text-slate-500 text-center pt-10">Dados insuficientes.</p>}
         </ChartCard>
       </div>
     </div>

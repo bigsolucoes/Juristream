@@ -22,12 +22,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 ease-in-out">
-      <div className={`bg-card-bg rounded-lg shadow-2xl p-6 w-full ${sizeClasses[size]} transform transition-all duration-300 ease-in-out scale-95 opacity-0 animate-modalShow`}>
+      <div className={`bg-white rounded-lg shadow-2xl p-6 w-full ${sizeClasses[size]} transform transition-all duration-300 ease-in-out scale-95 opacity-0 animate-modalShow`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-text-primary">{title}</h2>
+          <h2 className="text-xl font-semibold text-slate-800">{title}</h2>
           <button
             onClick={onClose}
-            className="text-text-secondary hover:text-accent p-1 rounded-full transition-colors"
+            className="text-slate-500 hover:text-blue-600 p-1 rounded-full transition-colors"
             aria-label="Close modal"
           >
             <XIcon size={24} /> {/* Ensure size is appropriate */}

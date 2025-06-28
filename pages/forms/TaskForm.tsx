@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppData } from '../../hooks/useAppData';
-import { Task } from '../../types';
+import { Task, TaskStatus } from '../../types';
 import toast from 'react-hot-toast';
+import { TASK_STATUS_OPTIONS } from '../../constants';
 
 interface TaskFormProps {
     onSuccess: () => void;
@@ -17,7 +18,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, taskToEdit }) => {
     const [assignedTo, setAssignedTo] = useState('');
     const [description, setDescription] = useState('');
     const [caseId, setCaseId] = useState<string | undefined>(undefined);
-    const [isCompleted, setIsCompleted] = useState(false);
+    const [status, setStatus] = useState<TaskStatus>(TaskStatus.PENDENTE);
 
     useEffect(() => {
         if (taskToEdit) {
@@ -27,7 +28,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, taskToEdit }) => {
             setAssignedTo(taskToEdit.assignedTo);
             setDescription(taskToEdit.description || '');
             setCaseId(taskToEdit.caseId);
-            setIsCompleted(taskToEdit.isCompleted);
+            setStatus(taskToEdit.status);
         } else {
             setTitle('');
             setType('Tarefa');
@@ -35,7 +36,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, taskToEdit }) => {
             setAssignedTo('');
             setDescription('');
             setCaseId(undefined);
-            setIsCompleted(false);
+            setStatus(TaskStatus.PENDENTE);
         }
     }, [taskToEdit]);
 
@@ -53,7 +54,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, taskToEdit }) => {
             assignedTo,
             description: description || undefined,
             caseId: caseId || undefined,
-            isCompleted,
+            status,
         };
 
         if (taskToEdit) {
@@ -102,23 +103,19 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, taskToEdit }) => {
                     <input type="text" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className={commonInputClass} required placeholder="Ex: Dr. Carlos, Estagiário"/>
                 </div>
             </div>
+
+            <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
+                <select value={status} onChange={e => setStatus(e.target.value as TaskStatus)} className={commonInputClass}>
+                    {TASK_STATUS_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                </select>
+            </div>
             
             <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Descrição (Opcional)</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className={commonInputClass} />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-                <input
-                    type="checkbox"
-                    id="isCompleted"
-                    checked={isCompleted}
-                    onChange={(e) => setIsCompleted(e.target.checked)}
-                    className="h-4 w-4 text-accent border-border-color rounded focus:ring-accent"
-                />
-                <label htmlFor="isCompleted" className="text-sm font-medium text-text-secondary">
-                    Marcar como concluída
-                </label>
             </div>
 
             <div className="flex justify-end pt-2">

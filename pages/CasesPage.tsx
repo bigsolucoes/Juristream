@@ -1,58 +1,77 @@
+
+
 import React, { useState, useMemo } from 'react';
 import { useAppData } from '../hooks/useAppData';
-import { Case, Client, CaseStatus } from '../types';
-import { PlusCircleIcon, PencilIcon, TrashIcon } from '../constants';
+import { Case, Client, CaseStatus, Task } from '../types';
+import { PlusCircleIcon, TrashIcon, ArchiveFolderIcon } from '../constants';
 import Modal from '../components/Modal';
 import CaseForm from './forms/CaseForm';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
-
-const getStatusClass = (status: CaseStatus) => {
-    switch (status) {
-      case CaseStatus.ATIVO: return 'bg-blue-100 text-blue-700';
-      case CaseStatus.SUSPENSO: return 'bg-yellow-100 text-yellow-700';
-      case CaseStatus.ENCERRADO_EXITO: return 'bg-green-100 text-green-700';
-      case CaseStatus.ENCERRADO_SEM_EXITO: return 'bg-red-100 text-red-700';
-      case CaseStatus.ARQUIVADO: return 'bg-slate-100 text-slate-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+import CaseCard from '../components/CaseCard';
+import { Link, useParams } from 'react-router-dom';
+import { formatDate } from '../utils/formatters';
 
 const CasesPage: React.FC = () => {
-    const { cases, clients, deleteCase, loading } = useAppData();
-    const [isFormModalOpen, setFormModalOpen] = useState(false);
-    const [editingCase, setEditingCase] = useState<Case | undefined>(undefined);
-    const [filter, setFilter] = useState<string>('all');
-    
-    const activeCases = useMemo(() => {
-        return cases.filter(c => !c.isDeleted);
-    }, [cases]);
+    const { cases, clients, tasks, softDeleteCase, restoreCase, toggleCaseArchive, permanentlyDeleteCase, loading } = useAppData();
+    const { view } = useParams<{ view: 'lixeira' | 'arquivados' }>();
 
-    const filteredCases = useMemo(() => {
-        if (filter === 'all') return activeCases;
-        return activeCases.filter(c => c.status === filter);
-    }, [activeCases, filter]);
-    
+    const [isFormModalOpen, setFormModalOpen] = useState(false);
+    const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
+    const [selectedCase, setSelectedCase] = useState<Case | undefined>(undefined);
+
+    const activeCases = useMemo(() => cases.filter(c => !c.isDeleted && !c.isArchived), [cases]);
+    const trashedCases = useMemo(() => cases.filter(c => c.isDeleted), [cases]);
+    const archivedCases = useMemo(() => cases.filter(c => !c.isDeleted && c.isArchived), [cases]);
+
+    const casesToDisplay = view === 'lixeira' ? trashedCases : view === 'arquivados' ? archivedCases : activeCases;
+    const pageTitle = view === 'lixeira' ? 'Lixeira de Processos' : view === 'arquivados' ? 'Processos Arquivados' : 'Gerenciamento de Processos';
+
     const handleAddCase = () => {
-        setEditingCase(undefined);
+        setSelectedCase(undefined);
         setFormModalOpen(true);
     };
 
     const handleEditCase = (caseToEdit: Case) => {
-        setEditingCase(caseToEdit);
+        setSelectedCase(caseToEdit);
+        setDetailsModalOpen(false); // Close details if open
         setFormModalOpen(true);
     };
+
+    const handleViewCase = (caseToView: Case) => {
+        setSelectedCase(caseToView);
+        setDetailsModalOpen(true);
+    }
     
-    const handleDeleteCase = (caseId: string) => {
-        if (window.confirm('Tem certeza que deseja arquivar este processo? Ele poderá ser recuperado posteriormente.')) {
-            deleteCase(caseId); // This is a soft delete
-            toast.success('Processo arquivado!');
+    const handleSoftDelete = (caseId: string) => {
+        if (window.confirm('Tem certeza que deseja mover este processo para a lixeira?')) {
+            softDeleteCase(caseId);
+            toast.success('Processo movido para a lixeira!');
+            if (selectedCase?.id === caseId) setDetailsModalOpen(false);
         }
     };
+    
+    const handlePermanentDelete = (caseId: string) => {
+        if (window.confirm('Esta ação é irreversível. Deseja excluir permanentemente este processo?')) {
+            permanentlyDeleteCase(caseId);
+            toast.success('Processo excluído permanentemente.');
+            if (selectedCase?.id === caseId) setDetailsModalOpen(false);
+        }
+    }
+
+    const handleRestore = (caseId: string) => {
+        restoreCase(caseId);
+        toast.success('Processo restaurado!');
+    }
+
+    const handleToggleArchive = (caseId: string) => {
+        toggleCaseArchive(caseId);
+        toast.success('Status de arquivamento do processo alterado!');
+    }
 
     const handleFormSuccess = () => {
         setFormModalOpen(false);
-        setEditingCase(undefined);
+        setSelectedCase(undefined);
     };
 
     if (loading) {
@@ -62,67 +81,72 @@ const CasesPage: React.FC = () => {
     return(
         <div className="h-full flex flex-col">
             <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
-                <h1 className="text-3xl font-bold text-text-primary">Gerenciamento de Processos</h1>
-                <button
-                    onClick={handleAddCase}
-                    className="bg-accent text-white px-4 py-2 rounded-lg shadow hover:brightness-90 transition-all flex items-center"
-                >
-                    <PlusCircleIcon size={20} /> <span className="ml-2">Adicionar Processo</span>
-                </button>
-            </div>
-
-            {/* TODO: Add filter buttons here */}
-
-            <div className="bg-card-bg shadow-lg rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-border-color">
-                    <thead className="bg-slate-50">
-                        <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Nome / N° do Processo</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Cliente</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Tipo</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Responsável</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-card-bg divide-y divide-border-color">
-                        {filteredCases.length > 0 ? filteredCases.map((c) => {
-                        const client = clients.find(cl => cl.id === c.clientId);
-                        return (
-                            <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-text-primary">{c.name}</div>
-                                <div className="text-xs text-text-secondary">{c.caseNumber}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{client?.name || 'N/A'}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{c.caseType}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{c.responsibleLawyers.join(', ')}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(c.status)}`}>
-                                {c.status}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                <button onClick={() => handleEditCase(c)} className="text-slate-500 hover:text-accent p-1" title="Editar Processo"><PencilIcon /></button>
-                                <button onClick={() => handleDeleteCase(c.id)} className="text-slate-500 hover:text-red-500 p-1" title="Arquivar Processo"><TrashIcon /></button>
-                            </td>
-                            </tr>
-                        );
-                        }) : (
-                        <tr>
-                            <td colSpan={6} className="px-6 py-10 text-center text-sm text-text-secondary">
-                            Nenhum processo para exibir.
-                            </td>
-                        </tr>
-                        )}
-                    </tbody>
-                    </table>
+                <h1 className="text-3xl font-bold text-slate-800">{pageTitle}</h1>
+                 <div className="flex items-center space-x-3">
+                    <Link to="/processos/lixeira" className={`flex items-center space-x-1.5 text-sm p-2 rounded-lg ${view === 'lixeira' ? 'bg-slate-200 text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}><TrashIcon size={16}/><span>Lixeira</span></Link>
+                    <Link to="/processos/arquivados" className={`flex items-center space-x-1.5 text-sm p-2 rounded-lg ${view === 'arquivados' ? 'bg-slate-200 text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}><ArchiveFolderIcon size={16}/><span>Arquivados</span></Link>
+                    <button
+                        onClick={handleAddCase}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all flex items-center"
+                    >
+                        <PlusCircleIcon size={20} /> <span className="ml-2">Novo Processo</span>
+                    </button>
                 </div>
             </div>
 
-            <Modal isOpen={isFormModalOpen} onClose={() => setFormModalOpen(false)} title={editingCase ? 'Editar Processo' : 'Adicionar Novo Processo'} size="lg">
-                <CaseForm onSuccess={handleFormSuccess} caseToEdit={editingCase} />
+             {view && <Link to="/processos" className="text-blue-600 hover:underline mb-4 inline-block">&larr; Voltar para Processos Ativos</Link>}
+
+            <div className="flex-grow overflow-y-auto">
+                 {casesToDisplay.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {casesToDisplay.map((c) => (
+                           <CaseCard 
+                             key={c.id}
+                             caseData={c}
+                             client={clients.find(cl => cl.id === c.clientId)}
+                             tasks={tasks.filter(t => t.caseId === c.id)}
+                             onView={handleViewCase}
+                             onEdit={handleEditCase}
+                             onSoftDelete={handleSoftDelete}
+                             onToggleArchive={handleToggleArchive}
+                             onRestore={handleRestore}
+                             onPermanentDelete={handlePermanentDelete}
+                             isArchivedView={!!view}
+                           />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-10 bg-white rounded-xl shadow">
+                        <p className="text-xl text-slate-500">Nenhum processo encontrado nesta visualização.</p>
+                        {!view && <p className="mt-2 text-slate-500">Clique em "Adicionar Processo" para começar.</p>}
+                    </div>
+                )}
+            </div>
+
+            {selectedCase && (
+                 <Modal isOpen={isDetailsModalOpen} onClose={() => setDetailsModalOpen(false)} title="Detalhes do Processo" size="lg">
+                    <div className="space-y-4">
+                         <div>
+                            <h3 className="text-2xl font-bold text-slate-900">{selectedCase.name}</h3>
+                            <p className="text-slate-500">{clients.find(c => c.id === selectedCase.clientId)?.name || 'Cliente não encontrado'}</p>
+                        </div>
+                        <div className="text-sm text-slate-600 space-y-1">
+                            <p><strong>Nº do Processo:</strong> {selectedCase.caseNumber || 'N/A'}</p>
+                            <p><strong>Vara/Tribunal:</strong> {selectedCase.court || 'N/A'}</p>
+                            <p><strong>Área:</strong> {selectedCase.caseType}</p>
+                            <p><strong>Status:</strong> {selectedCase.status}</p>
+                            <p><strong>Responsáveis:</strong> {selectedCase.responsibleLawyers.join(', ')}</p>
+                            <p><strong>Criado em:</strong> {formatDate(selectedCase.createdAt)}</p>
+                        </div>
+                         <div className="flex justify-end pt-4 border-t mt-4">
+                             <button onClick={() => setDetailsModalOpen(false)} className="bg-slate-500 text-white px-4 py-2 rounded-lg shadow mr-2">Fechar</button>
+                         </div>
+                    </div>
+                 </Modal>
+            )}
+
+            <Modal isOpen={isFormModalOpen} onClose={() => setFormModalOpen(false)} title={selectedCase ? 'Editar Processo' : 'Adicionar Novo Processo'} size="lg">
+                <CaseForm onSuccess={handleFormSuccess} caseToEdit={selectedCase} />
             </Modal>
         </div>
     );

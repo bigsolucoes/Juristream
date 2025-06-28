@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 
 const WHATSAPP_WARNING_KEY = 'big_whatsapp_warning_shown';
@@ -20,7 +21,7 @@ const CommunicationPage: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <h1 className="text-3xl font-bold text-text-primary mb-4">Comunicação (WhatsApp Web)</h1>
+      <h1 className="text-3xl font-bold text-slate-800 mb-4">Comunicação (WhatsApp Web)</h1>
 
       {showWarning && (
         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded-md shadow" role="alert">
@@ -42,7 +43,7 @@ const CommunicationPage: React.FC = () => {
         </div>
       )}
 
-      <div className="flex-grow bg-card-bg rounded-lg shadow-lg overflow-hidden">
+      <div className="flex-grow bg-white rounded-lg shadow-lg overflow-hidden">
         <iframe
           src="https://web.whatsapp.com/"
           title="WhatsApp Web"

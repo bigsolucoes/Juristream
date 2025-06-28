@@ -115,17 +115,17 @@ const JobForm: React.FC<JobFormProps> = ({ onSuccess, jobToEdit }) => {
     onSuccess();
   };
   
-  const commonInputClass = "w-full p-2 border border-border-color rounded-md focus:ring-2 focus:ring-accent focus:border-accent text-text-primary outline-none transition-shadow bg-card-bg";
+  const commonInputClass = "w-full p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-slate-800 outline-none transition-shadow bg-white";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="jobName" className="block text-sm font-medium text-text-secondary mb-1">Nome do Job <span className="text-red-500">*</span></label>
+        <label htmlFor="jobName" className="block text-sm font-medium text-slate-500 mb-1">Nome do Job <span className="text-red-500">*</span></label>
         <input type="text" id="jobName" value={name} onChange={(e) => setName(e.target.value)} className={commonInputClass} required />
       </div>
 
       <div>
-        <label htmlFor="client" className="block text-sm font-medium text-text-secondary mb-1">Cliente <span className="text-red-500">*</span></label>
+        <label htmlFor="client" className="block text-sm font-medium text-slate-500 mb-1">Cliente <span className="text-red-500">*</span></label>
         <select id="client" value={clientId} onChange={(e) => setClientId(e.target.value)} className={commonInputClass} required>
           <option value="" disabled>Selecione um cliente</option>
           {clients.map((client: Client) => (
@@ -136,7 +136,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSuccess, jobToEdit }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-            <label htmlFor="serviceType" className="block text-sm font-medium text-text-secondary mb-1">Tipo de Serviço</label>
+            <label htmlFor="serviceType" className="block text-sm font-medium text-slate-500 mb-1">Tipo de Serviço</label>
             <select id="serviceType" value={serviceType} onChange={(e) => setServiceType(e.target.value as ServiceType)} className={commonInputClass}>
             {SERVICE_TYPE_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -144,18 +144,18 @@ const JobForm: React.FC<JobFormProps> = ({ onSuccess, jobToEdit }) => {
             </select>
         </div>
         <div>
-            <label htmlFor="value" className="block text-sm font-medium text-text-secondary mb-1">Valor (R$)</label>
+            <label htmlFor="value" className="block text-sm font-medium text-slate-500 mb-1">Valor (R$)</label>
             <input type="number" id="value" value={value} onChange={(e) => setValue(parseFloat(e.target.value))} className={commonInputClass} min="0" step="0.01" />
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-            <label htmlFor="deadline" className="block text-sm font-medium text-text-secondary mb-1">Prazo de Entrega <span className="text-red-500">*</span></label>
+            <label htmlFor="deadline" className="block text-sm font-medium text-slate-500 mb-1">Prazo de Entrega <span className="text-red-500">*</span></label>
             <input type="date" id="deadline" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={commonInputClass} required/>
         </div>
         <div>
-            <label htmlFor="status" className="block text-sm font-medium text-text-secondary mb-1">Status</label>
+            <label htmlFor="status" className="block text-sm font-medium text-slate-500 mb-1">Status</label>
             <select id="status" value={status} onChange={(e) => setStatus(e.target.value as JobStatus)} className={commonInputClass}>
             {JOB_STATUS_OPTIONS.filter(opt => opt.value !== JobStatus.PAID).map(option => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -165,7 +165,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSuccess, jobToEdit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Links da Nuvem (Opcional, até 3)</label>
+        <label className="block text-sm font-medium text-slate-500 mb-1">Links da Nuvem (Opcional, até 3)</label>
         {cloudLinks.map((link, index) => (
           <div key={index} className="flex items-center space-x-2 mb-2">
             <LinkIcon size={18} />
@@ -186,7 +186,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSuccess, jobToEdit }) => {
       </div>
       
       <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-text-secondary mb-1">Notas Gerais (Opcional)</label>
+        <label htmlFor="notes" className="block text-sm font-medium text-slate-500 mb-1">Notas Gerais (Opcional)</label>
         <textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={commonInputClass} placeholder="Detalhes adicionais sobre o job..."></textarea>
       </div>
 
@@ -196,16 +196,16 @@ const JobForm: React.FC<JobFormProps> = ({ onSuccess, jobToEdit }) => {
           id="createCalendarEvent"
           checked={createCalendarEvent}
           onChange={(e) => setCreateCalendarEvent(e.target.checked)}
-          className="h-4 w-4 text-accent border-border-color rounded focus:ring-accent"
+          className="h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-600"
         />
-        <label htmlFor="createCalendarEvent" className="text-sm font-medium text-text-secondary flex items-center">
-            <CalendarIcon size={16} className="mr-1 text-accent" /> Criar evento no Google Calendar para o prazo
+        <label htmlFor="createCalendarEvent" className="text-sm font-medium text-slate-500 flex items-center">
+            <CalendarIcon size={16} className="mr-1 text-blue-600" /> Criar evento no Google Calendar para o prazo
         </label>
       </div>
 
 
       <div className="flex justify-end pt-2">
-        <button type="submit" className="bg-accent text-white px-6 py-2 rounded-lg shadow hover:brightness-90 transition-all">
+        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition-all">
           {jobToEdit ? 'Salvar Alterações' : 'Adicionar Job'}
         </button>
       </div>

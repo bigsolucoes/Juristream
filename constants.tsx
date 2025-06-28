@@ -1,11 +1,14 @@
+
+
 import React from 'react';
-import { CaseStatus, CaseType, ContractType, JobStatus, ServiceType } from './types';
+import { CaseStatus, CaseType, ContractType, JobStatus, ServiceType, TaskStatus } from './types';
 import { 
   Home, Briefcase, Users, CreditCard, BarChartBig, MessageCircle, Link2, FolderArchive, 
   Sparkles, Cog, PlusCircle, X, Trash2, Edit3, CheckCircle, AlertCircle, Clock, 
   DollarSign, Eye, EyeOff, List, ArrowRight, Settings, CalendarDays, Archive as ArchiveIconLucide, FileText, Bot,
   Save, Check, ChevronLeft, ChevronRight, Wallet, ExternalLink, ImageUp, ImageOff, UserCheck, Gavel, Scale, BookUser,
-  Plus, Link as LinkLucide, XCircle
+  Plus, Link as LinkLucide, XCircle, LogOut, Paperclip, Mic, FileSignature, ArchiveRestore, FolderClosed, UserPlus, Archive, Trash,
+  ChevronDown, Download
 } from 'lucide-react';
 
 export const APP_NAME = "Juristream";
@@ -31,8 +34,12 @@ export const LinkIcon = Link2;
 export const GavelIcon = Gavel; // For legal context
 export const ScaleIcon = Scale; // For legal context
 export const ClientIcon = BookUser; // Better icon for clients
+export const LogOutIcon = LogOut;
+export const ContractIcon = FileSignature; // For contracts
+export const RestoreIcon = ArchiveRestore; // For restoring from trash/archive
+export const ArchiveFolderIcon = FolderClosed; // For archive view
 
-// Icons that were missing
+// Icons that were missing or added for new features
 export const ExternalLinkIcon = ExternalLink;
 export const SparklesIcon = Sparkles;
 export const ListBulletIcon = List;
@@ -49,15 +56,25 @@ export const ImageUpIcon = ImageUp;
 export const ImageOffIcon = ImageOff;
 export const ChevronLeftIcon = ChevronLeft;
 export const ChevronRightIcon = ChevronRight;
+export const WalletIcon = Wallet;
+export const ChevronDownIcon = ChevronDown;
+export const DownloadIcon = Download;
+export const PaperclipIcon = Paperclip;
+export const MicIcon = Mic;
+export const AddUserIcon = UserPlus;
+export const ArchiveActionIcon = Archive;
+export const TrashActionIcon = Trash;
 
 
 export const NAVIGATION_ITEMS = [
   { name: 'Painel de Controle', path: '/dashboard', icon: HomeIcon },
   { name: 'Processos', path: '/processos', icon: BriefcaseIcon },
   { name: 'Clientes', path: '/clientes', icon: ClientIcon },
-  { name: 'Financeiro', path: '/financeiro', icon: Wallet },
+  { name: 'Contratos', path: '/contratos', icon: ContractIcon },
+  { name: 'Financeiro', path: '/financeiro', icon: WalletIcon },
   { name: 'Agenda', path: '/agenda', icon: CalendarIcon },
   { name: 'Tarefas e Prazos', path: '/tarefas', icon: TaskIcon },
+  { name: 'Assistente AI', path: '/ai-assistant', icon: SparklesIcon },
   { name: 'Relatórios', path: '/relatorios', icon: ChartBarIcon },
 ];
 
@@ -111,4 +128,10 @@ export const CONTRACT_TYPE_OPTIONS = [
   { value: ContractType.HOURLY, label: 'Por Hora' },
   { value: ContractType.RETAINER, label: 'Contrato de Partido (Mensal)' },
   { value: ContractType.MIXED, label: 'Misto' },
+];
+
+export const TASK_STATUS_OPTIONS = [
+  { value: TaskStatus.PENDENTE, label: 'Pendente' },
+  { value: TaskStatus.FAZENDO, label: 'Fazendo' },
+  { value: TaskStatus.CONCLUIDA, label: 'Concluída' },
 ];

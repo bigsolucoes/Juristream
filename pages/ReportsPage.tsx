@@ -1,152 +1,169 @@
-import React from 'react';
+
+
+import React, { useMemo } from 'react';
 import { useAppData } from '../hooks/useAppData';
-import { Case, Client, CaseType, CaseStatus } from '../types';
+import { Contract, ContractType, TaskStatus, CaseStatus, Client, Case } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
-const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-card-bg p-6 rounded-xl shadow-lg">
-    <h2 className="text-xl font-semibold text-text-primary mb-4">{title}</h2>
+const ChartCard: React.FC<{ title: string; children: React.ReactNode; size?: 'small' | 'large' }> = ({ title, children, size = 'large' }) => (
+  <div className={`bg-white p-6 rounded-xl shadow-lg ${size === 'small' ? 'md:col-span-1' : 'md:col-span-2'}`}>
+    <h2 className="text-xl font-semibold text-slate-800 mb-4">{title}</h2>
     <div className="h-72 md:h-96">
       {children}
     </div>
   </div>
 );
 
-const KPICard: React.FC<{ title: string; value: string | number; isCurrency?: boolean; privacyModeEnabled?: boolean }> = 
-  ({ title, value, isCurrency = false, privacyModeEnabled = false }) => (
-  <div className="bg-card-bg p-6 rounded-xl shadow-lg text-center">
-    <h3 className="text-md font-medium text-text-secondary mb-1">{title}</h3>
-    <p className="text-3xl font-bold text-accent">
-      {isCurrency 
-        ? formatCurrency(typeof value === 'number' ? value : parseFloat(value.toString()), privacyModeEnabled) 
-        : value
-      }
+const KPICard: React.FC<{ title: string; value: string | number; unit?: string }> = 
+  ({ title, value, unit }) => (
+  <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+    <h3 className="text-md font-medium text-slate-500 mb-1">{title}</h3>
+    <p className="text-3xl font-bold text-blue-600">
+      {value}
+      {unit && <span className="text-lg ml-1">{unit}</span>}
     </p>
   </div>
 );
 
 const ReportsPage: React.FC = () => {
-  const { cases, clients, settings, loading } = useAppData();
+  const { contracts, tasks, cases, clients, loading } = useAppData();
 
   if (loading) {
     return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
   }
-  const privacyMode = settings.privacyModeEnabled || false;
-  const accentColor = settings.accentColor || '#0d47a1'; 
-  const activeCases = cases.filter(c => !c.isDeleted);
-
-  // KPIs
-  const totalContractValue = activeCases.reduce((sum, c) => sum + (c.contractValue || 0), 0);
-  const successRate = activeCases.length > 0 ? (activeCases.filter(c => c.status === CaseStatus.ENCERRADO_EXITO).length / activeCases.filter(c => c.status.startsWith('Encerrado')).length * 100) : 0;
   
-  // Casos Encerrados por Mês
-  const monthlyClosedCases = activeCases
-    .filter(c => c.status.startsWith('Encerrado'))
-    .reduce((acc, c) => {
-        // This is a simplification. In a real app, you'd have a 'closedAt' date.
-        // We'll use createdAt for demonstration.
-        const date = new Date(c.createdAt);
-        if (isNaN(date.getTime())) return acc;
+  const accentColor = '#2563eb'; // blue-600
+  const PIE_COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#d946ef', '#06b6d4', '#f97316'];
+
+  // Data for "Casos Abertos vs. Encerrados por Mês"
+  const caseStatusByMonth = useMemo(() => {
+    const monthMap: { [key: string]: { opened: number, closed: number } } = {};
+    [...cases, ...clients.map(c => ({...c, status: undefined}))].forEach(item => {
+        if (!item.createdAt) return;
+        const date = new Date(item.createdAt);
         const yearMonthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-        acc[yearMonthKey] = (acc[yearMonthKey] || 0) + 1;
+        if (!monthMap[yearMonthKey]) monthMap[yearMonthKey] = { opened: 0, closed: 0 };
+
+        if ('status' in item && item.status) { // Is a Case
+            monthMap[yearMonthKey].opened++;
+            if (item.status === CaseStatus.ENCERRADO_EXITO || item.status === CaseStatus.ENCERRADO_SEM_EXITO) {
+                monthMap[yearMonthKey].closed++;
+            }
+        }
+    });
+     return Object.entries(monthMap)
+      .map(([name, value]) => ({ name, ...value }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(-12);
+  }, [cases, clients]);
+
+  // Data for "Novos Clientes por Mês"
+  const newClientsByMonth = useMemo(() => {
+      const monthMap: { [key: string]: number } = {};
+      clients.forEach(client => {
+          const date = new Date(client.createdAt);
+          const yearMonthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+          monthMap[yearMonthKey] = (monthMap[yearMonthKey] || 0) + 1;
+      });
+      return Object.entries(monthMap)
+        .map(([name, value]) => ({ name, "Novos Clientes": value }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .slice(-12);
+  }, [clients]);
+
+  // Data for case status distribution
+  const caseStatusDistribution = useMemo(() => {
+    const statusMap = cases.reduce((acc, caseItem) => {
+        acc[caseItem.status] = (acc[caseItem.status] || 0) + 1;
         return acc;
-    }, {} as {[key: string]: number});
-  
-  const closedCasesData = Object.entries(monthlyClosedCases)
-    .map(([key, count]) => {
-        const [year, month] = key.split('-');
-        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-        return { name: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit'}), Quantidade: count, key };
-    })
-    .sort((a,b) => a.key.localeCompare(b.key)).slice(-12);
+    }, {} as {[key in CaseStatus]?: number});
+    return Object.entries(statusMap).map(([name, value]) => ({ name, value }));
+  }, [cases]);
 
-  // Receita por Área do Direito
-  const revenueByArea = Object.values(CaseType).map(area => {
-    const total = activeCases
-      .filter(c => c.caseType === area && c.contractValue)
-      .reduce((sum, c) => sum + (c.contractValue || 0), 0);
-    return { name: area, value: total };
-  }).filter(s => s.value > 0);
-  
-  // Top Clientes por Valor de Contrato
-  const clientRevenue = clients.map(client => {
-    const total = activeCases
-      .filter(c => c.clientId === client.id && c.contractValue)
-      .reduce((sum, c) => sum + (c.contractValue || 0), 0);
-    return { name: client.name, value: total };
-  }).filter(c => c.value > 0).sort((a,b) => b.value - a.value).slice(0,5); 
+   // Data for case type distribution
+  const caseTypeDistribution = useMemo(() => {
+    const typeMap = cases.reduce((acc, caseItem) => {
+        acc[caseItem.caseType] = (acc[caseItem.caseType] || 0) + 1;
+        return acc;
+    }, {} as {[key in CaseStatus]?: number});
+    return Object.entries(typeMap).map(([name, value]) => ({ name, value }));
+  }, [cases]);
 
-  const PIE_COLORS = [accentColor, '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#A0522D', '#D2691E'];
-  const currencyTooltipFormatter = (value: number) => [formatCurrency(value, privacyMode), "Valor"];
-  const currencyAxisTickFormatter = (value: number) => privacyMode ? 'R$•••' : `R$${value/1000}k`;
+  // Data for "Tempo Médio de Conclusão de Tarefa"
+  const averageTaskCompletionTime = useMemo(() => {
+    const completedTasks = tasks.filter(t => t.status === TaskStatus.CONCLUIDA && t.completedAt && t.createdAt);
+    if (completedTasks.length === 0) return 0;
+    const totalTime = completedTasks.reduce((sum, task) => {
+      const start = new Date(task.createdAt).getTime();
+      const end = new Date(task.completedAt!).getTime();
+      return sum + (end - start);
+    }, 0);
+    const avgMilliseconds = totalTime / completedTasks.length;
+    return avgMilliseconds / (1000 * 60 * 60 * 24); // Convert to days
+  }, [tasks]);
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-text-primary mb-6">Relatórios de Desempenho</h1>
+      <h1 className="text-3xl font-bold text-slate-800 mb-6">Relatórios de Desempenho</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
-        <KPICard title="Valor Total em Contratos" value={totalContractValue} isCurrency={true} privacyModeEnabled={privacyMode} />
-        <KPICard title="Taxa de Êxito (Processos Encerrados)" value={isNaN(successRate) ? 'N/A' : `${successRate.toFixed(1)}%`} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <KPICard title="Total de Processos Ativos" value={cases.filter(c => c.status === CaseStatus.ATIVO).length} />
+        <KPICard title="Total de Tarefas Pendentes" value={tasks.filter(t => t.status === TaskStatus.PENDENTE).length} />
+        <KPICard title="Tempo Médio de Conclusão de Tarefa" value={averageTaskCompletionTime.toFixed(1)} unit="dias" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Casos Encerrados por Mês">
-            {closedCasesData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={closedCasesData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} />
-                    <YAxis allowDecimals={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                    <Tooltip />
-                    <Legend wrapperStyle={{fontSize: "14px"}} />
-                    <Bar dataKey="Quantidade" fill={accentColor} radius={[4, 4, 0, 0]} />
-                </BarChart>
-                </ResponsiveContainer>
-            ) : <p className="text-text-secondary text-center pt-10">Dados insuficientes.</p>}
-        </ChartCard>
-        
-        <ChartCard title="Valor Contratado por Área do Direito">
-          {revenueByArea.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-               <BarChart data={revenueByArea} layout="vertical" margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis type="number" tickFormatter={currencyAxisTickFormatter} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" width={100} tick={{ fill: '#64748b', fontSize: 11 }} />
-                <Tooltip formatter={currencyTooltipFormatter} />
-                <Bar dataKey="value" fill={accentColor} radius={[0, 4, 4, 0]} barSize={20}>
-                    {revenueByArea.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ): <p className="text-text-secondary text-center pt-10">Dados insuficientes.</p>}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ChartCard title="Casos Abertos vs. Encerrados por Mês">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={caseStatusByMonth}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="opened" fill={accentColor} name="Abertos" />
+              <Bar dataKey="closed" fill="#10b981" name="Encerrados" />
+            </BarChart>
+          </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Top 5 Clientes (por Valor Contratado)">
-           {clientRevenue.length > 0 ? (
+        <ChartCard title="Distribuição de Status dos Processos">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie 
-                    data={clientRevenue} 
-                    dataKey="value" 
-                    nameKey="name" 
-                    cx="50%" cy="50%" 
-                    outerRadius={100} 
-                    labelLine={false} 
-                    label={({ name, percent }) => privacyMode ? `${name} (•••%)` : `${name} (${(percent * 100).toFixed(0)}%)`}
-                >
-                  {clientRevenue.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => formatCurrency(value, privacyMode)}/>
-                <Legend wrapperStyle={{fontSize: "14px"}}/>
-              </PieChart>
+                <PieChart>
+                    <Pie data={caseStatusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                         {caseStatusDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </PieChart>
             </ResponsiveContainer>
-           ) : <p className="text-text-secondary text-center pt-10">Dados insuficientes.</p>}
+        </ChartCard>
+        
+        <ChartCard title="Distribuição de Tipos de Processos">
+            <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                    <Pie data={caseTypeDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={80} outerRadius={120} label>
+                         {caseTypeDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </PieChart>
+            </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Novos Clientes por Mês">
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={newClientsByMonth}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="Novos Clientes" fill="#f59e0b" />
+                </BarChart>
+            </ResponsiveContainer>
         </ChartCard>
       </div>
     </div>

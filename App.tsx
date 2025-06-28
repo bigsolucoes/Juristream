@@ -1,4 +1,6 @@
-import React from 'react';
+
+
+import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -10,14 +12,19 @@ import ReportsPage from './pages/ReportsPage';
 import AgendaPage from './pages/AgendaPage';
 import TasksPage from './pages/TasksPage';
 import SettingsPage from './pages/SettingsPage';
+import ContractsPage from './pages/ContractsPage';
+import AIAssistantPage from './pages/AIAssistantPage';
 import { useAppData } from './hooks/useAppData';
 import { Toaster } from 'react-hot-toast';
+import BrandingSplashScreen from './components/BrandingSplashScreen';
+import PinLoginPage from './pages/PinLoginPage';
 import RestScreen from './components/RestScreen';
+import FloatingChatWidget from './components/FloatingChatWidget';
 
 const MainLayout: React.FC = () => {
   return (
     <div 
-      className="flex flex-col h-screen bg-main-bg text-text-primary" 
+      className="flex flex-col h-screen bg-slate-50 text-slate-800" 
     >
       <Header />
       <div className="flex flex-1 overflow-hidden">
@@ -26,34 +33,54 @@ const MainLayout: React.FC = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/processos" element={<CasesPage />} />
-            <Route path="/clientes" element={<ClientsPage />} />
+            <Route path="/processos/:view?" element={<CasesPage />} />
+            <Route path="/clientes/:view?" element={<ClientsPage />} />
+            <Route path="/contratos/:view?" element={<ContractsPage />} />
             <Route path="/financeiro" element={<FinancialsPage />} />
             <Route path="/relatorios" element={<ReportsPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
-            <Route path="/tarefas" element={<TasksPage />} />
+            <Route path="/tarefas/:view?" element={<TasksPage />} />
+            <Route path="/ai-assistant" element={<AIAssistantPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
       </div>
+      <FloatingChatWidget />
       <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
 };
 
+const AuthFlow: React.FC = () => {
+  const [showPinLogin, setShowPinLogin] = useState(false);
+
+  if (!showPinLogin) {
+      return <RestScreen onWakeUp={() => setShowPinLogin(true)} message="Clique para entrar" />;
+  }
+  return <PinLoginPage />;
+};
+
+
 const App: React.FC = () => {
-  const { isRestScreenActive } = useAppData();
+  const { isAuthenticated, isResting, exitRestMode, loading } = useAppData();
+
+  if (loading) {
+    return <BrandingSplashScreen isFadingOut={false} />;
+  }
+
+  if (isAuthenticated && isResting) {
+    return <RestScreen onWakeUp={exitRestMode} />;
+  }
 
   return (
-    <>
-      {isRestScreenActive && <RestScreen />}
-      <div className={isRestScreenActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}>
-        <Routes>
-            <Route path="/*" element={<MainLayout />} />
-        </Routes>
-      </div>
-    </>
+      <Routes>
+          {isAuthenticated ? (
+              <Route path="/*" element={<MainLayout />} />
+          ) : (
+              <Route path="*" element={<AuthFlow />} />
+          )}
+      </Routes>
   );
 };
 

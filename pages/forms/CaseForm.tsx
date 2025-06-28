@@ -79,23 +79,23 @@ const CaseForm: React.FC<CaseFormProps> = ({ onSuccess, caseToEdit }) => {
     onSuccess();
   };
   
-  const commonInputClass = "w-full p-2 border border-border-color rounded-md focus:ring-2 focus:ring-accent focus:border-accent text-text-primary outline-none transition-shadow bg-card-bg";
+  const commonInputClass = "w-full p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-slate-800 outline-none transition-shadow bg-white";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Nome do Processo <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-slate-500 mb-1">Nome do Processo <span className="text-red-500">*</span></label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={commonInputClass} required />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Nº do Processo</label>
+          <label className="block text-sm font-medium text-slate-500 mb-1">Nº do Processo</label>
           <input type="text" value={caseNumber} onChange={(e) => setCaseNumber(e.target.value)} className={commonInputClass} />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Cliente <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-slate-500 mb-1">Cliente <span className="text-red-500">*</span></label>
         <select value={clientId} onChange={(e) => setClientId(e.target.value)} className={commonInputClass} required>
           <option value="" disabled>Selecione um cliente</option>
           {clients.map((client: Client) => (
@@ -106,34 +106,34 @@ const CaseForm: React.FC<CaseFormProps> = ({ onSuccess, caseToEdit }) => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Vara / Tribunal</label>
+          <label className="block text-sm font-medium text-slate-500 mb-1">Vara / Tribunal</label>
           <input type="text" value={court} onChange={(e) => setCourt(e.target.value)} className={commonInputClass} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Advogado(s) Responsável(is) <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-slate-500 mb-1">Advogado(s) Responsável(is) <span className="text-red-500">*</span></label>
           <input type="text" value={responsibleLawyers} onChange={(e) => setResponsibleLawyers(e.target.value)} placeholder="Separe por vírgulas" className={commonInputClass} required />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Área do Direito</label>
+          <label className="block text-sm font-medium text-slate-500 mb-1">Área do Direito</label>
           <select value={caseType} onChange={(e) => setCaseType(e.target.value as CaseType)} className={commonInputClass}>
             {CASE_TYPE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
+          <label className="block text-sm font-medium text-slate-500 mb-1">Status</label>
           <select value={status} onChange={(e) => setStatus(e.target.value as CaseStatus)} className={commonInputClass}>
             {CASE_STATUS_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         </div>
       </div>
       
-      <fieldset className="border border-border-color rounded-md p-4 space-y-4">
-        <legend className="text-sm font-medium text-text-secondary px-2">Detalhes do Contrato de Honorários</legend>
+      <fieldset className="border border-slate-200 rounded-md p-4 space-y-4">
+        <legend className="text-sm font-medium text-slate-500 px-2">Detalhes do Contrato de Honorários</legend>
         <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Tipo de Contrato</label>
+            <label className="block text-sm font-medium text-slate-500 mb-1">Tipo de Contrato</label>
             <select value={contractType} onChange={(e) => setContractType(e.target.value as ContractType)} className={commonInputClass}>
                 <option value="">Não definido</option>
                 {CONTRACT_TYPE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -142,7 +142,7 @@ const CaseForm: React.FC<CaseFormProps> = ({ onSuccess, caseToEdit }) => {
         
         {(contractType === ContractType.PRO_LABORE || contractType === ContractType.RETAINER || contractType === ContractType.HOURLY || contractType === ContractType.MIXED) && (
             <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label className="block text-sm font-medium text-slate-500 mb-1">
                     {contractType === ContractType.HOURLY ? 'Valor da Hora (R$)' : 'Valor Fixo (R$)'}
                 </label>
                 <input type="number" value={contractValue} onChange={(e) => setContractValue(parseFloat(e.target.value))} className={commonInputClass} min="0" step="0.01" />
@@ -151,14 +151,14 @@ const CaseForm: React.FC<CaseFormProps> = ({ onSuccess, caseToEdit }) => {
 
         {(contractType === ContractType.AD_EXITUM || contractType === ContractType.MIXED) && (
             <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Percentual de Êxito (%)</label>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Percentual de Êxito (%)</label>
                 <input type="number" value={successFeePercentage} onChange={(e) => setSuccessFeePercentage(parseFloat(e.target.value))} className={commonInputClass} min="0" max="100" step="0.1" />
             </div>
         )}
       </fieldset>
 
       <div className="flex justify-end pt-2">
-        <button type="submit" className="bg-accent text-white px-6 py-2 rounded-lg shadow hover:brightness-90 transition-all">
+        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition-all">
           {caseToEdit ? 'Salvar Alterações' : 'Adicionar Processo'}
         </button>
       </div>

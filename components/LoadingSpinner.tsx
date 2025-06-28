@@ -3,10 +3,10 @@ import React from 'react';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
-  color?: string; // e.g., 'text-accent'
+  color?: string; // e.g., 'text-blue-600'
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', color = 'text-accent' }) => {
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', color = 'text-blue-600' }) => {
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',

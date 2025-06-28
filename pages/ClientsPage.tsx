@@ -1,135 +1,177 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useMemo } from 'react';
 import { useAppData } from '../hooks/useAppData';
-import { Client, Case, CaseStatus } from '../types';
-import { PlusCircleIcon, PencilIcon, TrashIcon, BriefcaseIcon } from '../constants';
+import { Client, Case } from '../types';
+import { PlusCircleIcon, PencilIcon, TrashIcon, BriefcaseIcon, UsersIcon, ArchiveFolderIcon, RestoreIcon } from '../constants';
 import Modal from '../components/Modal';
 import ClientForm from './forms/ClientForm';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
-import { formatCurrency, formatDate } from '../utils/formatters';
-
-interface ClientCardProps {
-  client: Client;
-  cases: Case[];
-  onEdit: (client: Client) => void;
-  onDelete: (clientId: string) => void;
-  privacyModeEnabled: boolean;
-}
-
-const ClientCard: React.FC<ClientCardProps> = ({ client, cases, onEdit, onDelete, privacyModeEnabled }) => {
-  const clientCases = cases.filter(c => c.clientId === client.id && !c.isDeleted);
-  const activeCasesCount = clientCases.filter(c => c.status === CaseStatus.ATIVO).length;
-  const totalBilled = clientCases.reduce((sum, c) => sum + (c.contractValue || 0), 0);
-
-  return (
-    <div className="bg-card-bg p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between">
-      <div>
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-xl font-semibold text-text-primary">{client.name}</h3>
-            {client.company && <p className="text-sm text-text-secondary">{client.company}</p>}
-          </div>
-          <div className="flex space-x-2 flex-shrink-0">
-            <button onClick={() => onEdit(client)} className="text-slate-500 hover:text-accent p-1" title="Editar Cliente"><PencilIcon size={18} /></button>
-            <button onClick={() => onDelete(client.id)} className="text-slate-500 hover:text-red-500 p-1" title="Excluir Cliente"><TrashIcon size={18} /></button>
-          </div>
-        </div>
-        <div className="mt-4 space-y-2">
-          <p className="text-sm text-text-secondary"><strong>Email:</strong> {client.email}</p>
-          {client.phone && <p className="text-sm text-text-secondary"><strong>Telefone:</strong> {client.phone}</p>}
-          {client.cpf && <p className="text-sm text-text-secondary"><strong>CPF/CNPJ:</strong> {client.cpf}</p>}
-          <p className="text-sm text-text-secondary"><strong>Cliente desde:</strong> {formatDate(client.createdAt)}</p>
-          {client.observations && (
-            <div className="mt-2 pt-2 border-t border-border-color">
-                <p className="text-sm font-medium text-text-secondary">Observações:</p>
-                <p className="text-sm text-text-secondary whitespace-pre-wrap">{client.observations}</p>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="mt-4 pt-4 border-t border-border-color">
-        <div className="flex items-center text-text-primary">
-          <BriefcaseIcon size={20} />
-          <span className="ml-2">Total de Processos Ativos: {activeCasesCount}</span>
-        </div>
-         <p className="text-sm text-text-secondary mt-1">Valor total contratado: {formatCurrency(totalBilled, privacyModeEnabled)}</p>
-      </div>
-    </div>
-  );
-};
-
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import ClientCard from '../components/ClientCard'; 
+import { formatDate } from '../utils/formatters';
 
 const ClientsPage: React.FC = () => {
-  const { clients, cases, deleteClient, settings, loading } = useAppData();
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
-
+  const { clients, cases, softDeleteClient, restoreClient, toggleClientArchive, permanentlyDeleteClient, loading } = useAppData();
+  const { view } = useParams<{ view: 'lixeira' | 'arquivados' }>();
+  const navigate = useNavigate();
+  
+  const [isFormModalOpen, setFormModalOpen] = useState(false);
+  const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
+  
   const handleAddClient = () => {
-    setEditingClient(undefined);
-    setModalOpen(true);
+    setSelectedClient(undefined);
+    setFormModalOpen(true);
   };
 
   const handleEditClient = (client: Client) => {
-    setEditingClient(client);
-    setModalOpen(true);
+    setSelectedClient(client);
+    setDetailsModalOpen(false); // Close details if open
+    setFormModalOpen(true);
+  };
+  
+  const handleViewClient = (client: Client) => {
+    setSelectedClient(client);
+    setDetailsModalOpen(true);
   };
 
-  const handleDeleteClient = (clientId: string) => {
-    const associatedCasesCount = cases.filter(c => c.clientId === clientId && !c.isDeleted).length;
-    let confirmMessage = 'Tem certeza que deseja excluir este cliente?';
-    if (associatedCasesCount > 0) {
-      confirmMessage += `\nExistem ${associatedCasesCount} processo(s) associados a este cliente. Eles não serão removidos, mas o cliente não poderá ser selecionado para novos processos.`;
-    }
-
-    if (window.confirm(confirmMessage)) {
-      deleteClient(clientId);
-      toast.success('Cliente excluído com sucesso!');
+  const handleSoftDelete = (clientId: string) => {
+    if (window.confirm('Tem certeza que deseja mover este cliente para a lixeira?')) {
+      softDeleteClient(clientId);
+      toast.success('Cliente movido para a lixeira!');
+      if(selectedClient?.id === clientId) setDetailsModalOpen(false);
     }
   };
   
+  const handlePermanentDelete = (clientId: string) => {
+     if (window.confirm('Esta ação é irreversível. Deseja excluir permanentemente este cliente?')) {
+      permanentlyDeleteClient(clientId);
+      toast.success('Cliente excluído permanentemente.');
+      if(selectedClient?.id === clientId) setDetailsModalOpen(false);
+    }
+  }
+
+  const handleRestore = (clientId: string) => {
+      restoreClient(clientId);
+      toast.success('Cliente restaurado!');
+  }
+
+  const handleToggleArchive = (clientId: string) => {
+      toggleClientArchive(clientId);
+      toast.success('Status de arquivamento do cliente alterado!');
+  }
+  
   const handleFormSuccess = () => {
-    setModalOpen(false);
-    setEditingClient(undefined);
+    setFormModalOpen(false);
+    setSelectedClient(undefined);
   };
 
+  const handleCaseClick = (caseId: string) => {
+      setDetailsModalOpen(false);
+      // Ideally, this would navigate to the specific case detail page
+      // For now, it navigates to the main cases page.
+      navigate('/processos');
+  }
+
+  const activeClients = useMemo(() => clients.filter(c => !c.isDeleted && !c.isArchived), [clients]);
+  const trashedClients = useMemo(() => clients.filter(c => c.isDeleted), [clients]);
+  const archivedClients = useMemo(() => clients.filter(c => !c.isDeleted && c.isArchived), [clients]);
+
+  const clientsToDisplay = view === 'lixeira' ? trashedClients : view === 'arquivados' ? archivedClients : activeClients;
+  const pageTitle = view === 'lixeira' ? 'Lixeira de Clientes' : view === 'arquivados' ? 'Clientes Arquivados' : 'Clientes';
+  
   if (loading) {
     return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
   }
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-text-primary">Clientes</h1>
-        <button
-          onClick={handleAddClient}
-          className="bg-accent text-white px-4 py-2 rounded-lg shadow hover:brightness-90 transition-all flex items-center"
-        >
-          <PlusCircleIcon size={20} /> <span className="ml-2">Adicionar Novo Cliente</span>
-        </button>
+      <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+        <h1 className="text-3xl font-bold text-slate-800">{pageTitle}</h1>
+        <div className="flex items-center space-x-3">
+            <Link to="/clientes/lixeira" className={`flex items-center space-x-1.5 text-sm p-2 rounded-lg ${view === 'lixeira' ? 'bg-slate-200 text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}><TrashIcon size={16}/><span>Lixeira</span></Link>
+            <Link to="/clientes/arquivados" className={`flex items-center space-x-1.5 text-sm p-2 rounded-lg ${view === 'arquivados' ? 'bg-slate-200 text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}><ArchiveFolderIcon size={16}/><span>Arquivados</span></Link>
+             <button onClick={handleAddClient} className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all flex items-center">
+                <PlusCircleIcon size={20} /> <span className="ml-2">Novo Cliente</span>
+            </button>
+        </div>
       </div>
+      
+      {view && <Link to="/clientes" className="text-blue-600 hover:underline mb-4 inline-block">&larr; Voltar para Clientes Ativos</Link>}
 
-      {clients.length > 0 ? (
+      {clientsToDisplay.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {clients.sort((a,b) => a.name.localeCompare(b.name)).map(client => (
+          {clientsToDisplay.sort((a,b) => a.name.localeCompare(b.name)).map(client => (
             <ClientCard 
               key={client.id} 
               client={client} 
-              cases={cases} 
+              cases={cases.filter(c => c.clientId === client.id)}
+              onView={handleViewClient}
               onEdit={handleEditClient}
-              onDelete={handleDeleteClient}
-              privacyModeEnabled={settings.privacyModeEnabled || false}
+              onSoftDelete={handleSoftDelete}
+              onToggleArchive={handleToggleArchive}
+              onRestore={handleRestore}
+              onPermanentDelete={handlePermanentDelete}
+              isArchivedView={!!view}
             />
           ))}
         </div>
       ) : (
-        <div className="text-center py-10">
-          <p className="text-xl text-text-secondary">Nenhum cliente cadastrado ainda.</p>
-          <p className="mt-2 text-text-secondary">Clique em "Adicionar Novo Cliente" para começar.</p>
+        <div className="text-center py-10 bg-white rounded-xl shadow">
+          <UsersIcon size={48} className="mx-auto text-slate-300 mb-4"/>
+          <p className="text-xl text-slate-500">Nenhum cliente encontrado nesta visualização.</p>
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)} title={editingClient ? 'Editar Cliente' : 'Adicionar Novo Cliente'} size="lg">
-        <ClientForm onSuccess={handleFormSuccess} clientToEdit={editingClient} />
+      {/* Details Modal */}
+      {selectedClient && (
+         <Modal isOpen={isDetailsModalOpen} onClose={() => setDetailsModalOpen(false)} title="Detalhes do Cliente" size="lg">
+            <div className="space-y-4">
+                 <div>
+                    <h3 className="text-2xl font-bold text-slate-900">{selectedClient.name}</h3>
+                    <p className="text-slate-500">{selectedClient.company}</p>
+                </div>
+                <div className="text-sm text-slate-600 space-y-1">
+                    <p><strong>Email:</strong> {selectedClient.email}</p>
+                    <p><strong>Telefone:</strong> {selectedClient.phone || 'N/A'}</p>
+                    <p><strong>CPF/CNPJ:</strong> {selectedClient.cpf || 'N/A'}</p>
+                    <p><strong>Cliente desde:</strong> {formatDate(selectedClient.createdAt)}</p>
+                </div>
+                {selectedClient.observations && (
+                    <div>
+                        <h4 className="font-semibold text-slate-700">Observações:</h4>
+                        <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md mt-1 whitespace-pre-wrap">{selectedClient.observations}</p>
+                    </div>
+                )}
+                <div>
+                    <h4 className="font-semibold text-slate-700 mb-2">Processos Vinculados:</h4>
+                    <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                        {cases.filter(c => c.clientId === selectedClient.id && !c.isDeleted).map(c => (
+                            <li key={c.id}>
+                                <div onClick={() => handleCaseClick(c.id)} className="text-sm p-2 bg-slate-100 rounded-md flex items-center hover:bg-blue-100 hover:text-blue-800 cursor-pointer transition-colors">
+                                    <BriefcaseIcon size={14} className="mr-2 text-slate-500" />
+                                    <span className="flex-grow">{c.name}</span>
+                                </div>
+                            </li>
+                        ))}
+                         {cases.filter(c => c.clientId === selectedClient.id).length === 0 && <li className="text-sm text-slate-400">Nenhum processo vinculado.</li>}
+                    </ul>
+                </div>
+                 <div className="flex justify-end pt-4 border-t mt-4">
+                     <button onClick={() => setDetailsModalOpen(false)} className="bg-slate-500 text-white px-4 py-2 rounded-lg shadow mr-2">Fechar</button>
+                     <button onClick={() => handleEditClient(selectedClient)} className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow flex items-center">
+                        <PencilIcon size={16} className="mr-1" /> Editar
+                     </button>
+                 </div>
+            </div>
+        </Modal>
+      )}
+
+      {/* Form Modal */}
+      <Modal isOpen={isFormModalOpen} onClose={() => setFormModalOpen(false)} title={selectedClient ? 'Editar Cliente' : 'Adicionar Novo Cliente'} size="lg">
+        <ClientForm onSuccess={handleFormSuccess} clientToEdit={selectedClient} />
       </Modal>
     </div>
   );

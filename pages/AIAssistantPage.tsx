@@ -1,17 +1,17 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { AIChatMessage as AIChatMessageType, GroundingChunk } from '../types';
-import AIChatMessageComponent from '../components/AIChatMessage';
 import { SparklesIcon } from '../constants';
 import { callGeminiApi } from '../services/geminiService';
 import { v4 as uuidv4 } from 'uuid';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { SendHorizonal } from 'lucide-react'; // Using SendHorizonal for send button
+import { SendHorizonal } from 'lucide-react';
+import ChatDisplay from '../components/ChatDisplay';
 
 const AIAssistantPage: React.FC = () => {
-  const { jobs, clients, loading: appDataLoading } = useAppData();
-  const [messages, setMessages] = useState<AIChatMessageType[]>([]);
+  const { jobs, clients, loading: appDataLoading, aiChatHistory, addAiChatMessage, cases, contracts, tasks } = useAppData();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
@@ -20,20 +20,18 @@ const AIAssistantPage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(scrollToBottom, [messages]);
-  
+  useEffect(scrollToBottom, [aiChatHistory]);
+
   useEffect(() => {
-    if(messages.length === 0){
-        setMessages([
-            {
-                id: uuidv4(),
-                text: "Olá! Sou seu assistente de IA do BIG. Como posso ajudar a gerenciar seus projetos e finanças hoje?",
-                sender: 'ai',
-                timestamp: new Date().toISOString()
-            }
-        ]);
+    if (aiChatHistory.length === 0) {
+      addAiChatMessage({
+        id: uuidv4(),
+        text: "Olá! Sou seu assistente jurídico. Como posso ajudar com seus processos, tarefas e finanças hoje?",
+        sender: 'ai',
+        timestamp: new Date().toISOString()
+      });
     }
-  }, [messages.length]); // Added messages.length to dependency array
+  }, [aiChatHistory.length, addAiChatMessage]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -45,16 +43,12 @@ const AIAssistantPage: React.FC = () => {
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, userMessage]);
+    addAiChatMessage(userMessage);
     setInput('');
     setIsLoading(true);
 
     try {
-      const contextData = {
-        jobs,
-        clients,
-      };
-      
+      const contextData = { jobs, clients, cases, contracts, tasks };
       const aiResponse = await callGeminiApi(input, contextData);
       
       let responseText = aiResponse.text;
@@ -77,7 +71,7 @@ const AIAssistantPage: React.FC = () => {
         sender: 'ai',
         timestamp: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, aiMessage]);
+      addAiChatMessage(aiMessage);
     } catch (error) {
       console.error("Error calling AI API:", error);
       const errorMessage: AIChatMessageType = {
@@ -86,52 +80,44 @@ const AIAssistantPage: React.FC = () => {
         sender: 'ai',
         timestamp: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      addAiChatMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const exampleQuestions = [
-    "Quanto eu faturei com a TechCorp Solutions este ano?",
-    "Quais jobs de fotografia estão atrasados?",
-    "Liste todos os pagamentos que tenho a receber este mês.",
-    "Qual foi meu mês mais lucrativo nos últimos seis meses?",
-    "Me dê um resumo do projeto 'Vídeo Promocional TechCorp'."
+    "Resuma o caso 'Ação de Cobrança vs. Inovatech'.",
+    "Quais tarefas estão pendentes para a Dra. Beatriz?",
+    "Liste os contratos ativos do cliente GlobalCorp S.A.",
+    "Qual o valor total dos contratos do tipo 'Pro Labore'?",
   ];
-
-  const handleExampleQuestionClick = (question: string) => {
-    setInput(question);
-  };
-
 
   if (appDataLoading) {
     return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
   }
 
   return (
-    <div className="flex flex-col h-full bg-card-bg shadow-xl rounded-xl overflow-hidden">
-      <header className="p-4 border-b border-border-color bg-slate-50">
-        <h1 className="text-xl font-semibold text-text-primary flex items-center">
-          <SparklesIcon size={22} /> <span className="ml-2">Assistente AI</span>
+    <div className="flex flex-col h-full bg-white shadow-xl rounded-xl overflow-hidden">
+      <header className="p-4 border-b border-slate-200 bg-slate-50">
+        <h1 className="text-xl font-semibold text-slate-800 flex items-center">
+          <SparklesIcon size={22} /> <span className="ml-2">Assistente Interno</span>
         </h1>
       </header>
 
       <div className="flex-grow p-4 overflow-y-auto space-y-2">
-        {messages.map(msg => (
-          <AIChatMessageComponent key={msg.id} message={msg} />
-        ))}
+        <ChatDisplay messages={aiChatHistory} />
         <div ref={messagesEndRef} />
         {isLoading && <div className="flex justify-center py-2"><LoadingSpinner size="sm" /></div>}
       </div>
 
-      <div className="p-2 border-t border-border-color bg-slate-50">
+      <div className="p-2 border-t border-slate-200 bg-slate-50">
          <div className="mb-2 px-2 flex flex-wrap gap-2">
             {exampleQuestions.map((q, i) => (
               <button 
                 key={i} 
-                onClick={() => handleExampleQuestionClick(q)}
-                className="text-xs bg-slate-200 hover:bg-slate-300 text-text-secondary px-2 py-1 rounded-full transition-colors"
+                onClick={() => setInput(q)}
+                className="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full transition-colors"
                 disabled={isLoading}
               >
                 {q}
@@ -144,12 +130,12 @@ const AIAssistantPage: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Pergunte algo ao assistente..."
-            className="flex-grow p-3 border border-border-color rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-shadow"
+            className="flex-grow p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-shadow"
             disabled={isLoading}
           />
           <button
             type="submit"
-            className="bg-accent text-white p-3 rounded-lg shadow hover:bg-opacity-90 transition-colors disabled:opacity-50"
+            className="bg-blue-600 text-white p-3 rounded-lg shadow hover:bg-opacity-90 transition-colors disabled:opacity-50"
             disabled={isLoading || !input.trim()}
           >
             <SendHorizonal size={24} />

@@ -1,3 +1,12 @@
+
+
+
+
+export interface User {
+  id: string;
+  username: string;
+}
+
 export enum CaseStatus {
   ATIVO = 'Ativo',
   SUSPENSO = 'Suspenso',
@@ -59,6 +68,8 @@ export interface Client {
   cpf?: string;
   observations?: string;
   createdAt: string;
+  isDeleted?: boolean;
+  isArchived?: boolean;
 }
 
 export interface CaseUpdate {
@@ -68,7 +79,7 @@ export interface CaseUpdate {
 }
 
 export interface Case {
-  id: string;
+  id:string;
   name: string; // "Ação de Indenização por Danos Morais"
   caseNumber: string;
   clientId: string;
@@ -77,11 +88,28 @@ export interface Case {
   status: CaseStatus;
   responsibleLawyers: string[]; // For now, just names. Could be User IDs.
   updates: CaseUpdate[];
-  contractType?: ContractType;
-  contractValue?: number; // Could be fixed value, hourly rate, etc.
-  successFeePercentage?: number;
   createdAt: string;
+  contractType?: ContractType;
+  contractValue?: number;
+  successFeePercentage?: number;
   isDeleted?: boolean;
+  isArchived?: boolean;
+}
+
+export enum TaskStatus {
+    PENDENTE = 'Pendente',
+    FAZENDO = 'Fazendo',
+    CONCLUIDA = 'Concluída',
+}
+
+export interface TaskUpdate {
+  id: string;
+  text: string;
+  timestamp: string;
+  updatedAt?: string;
+  attachmentName?: string;
+  attachmentMimeType?: string;
+  attachmentData?: string; // base64
 }
 
 export interface Task {
@@ -89,11 +117,15 @@ export interface Task {
     title: string;
     type: 'Prazo' | 'Tarefa';
     dueDate: string; // ISO String
-    caseId?: string; // Link to a case
-    isCompleted: boolean;
+    caseId: string; // Link to a case, now mandatory
+    status: TaskStatus;
     assignedTo: string; // For now, just a name
     description?: string;
     createdAt: string;
+    completedAt?: string;
+    updates: TaskUpdate[];
+    isDeleted?: boolean;
+    isArchived?: boolean;
 }
 
 export interface Appointment {
@@ -105,6 +137,39 @@ export interface Appointment {
     clientId?: string;
     notes?: string;
     location?: string;
+    createCalendarEvent?: boolean;
+}
+
+export enum InstallmentStatus {
+  PENDENTE = 'Pendente',
+  PAGA_PARCIALMENTE = 'Paga Parcialmente',
+  PAGA = 'Paga',
+  ATRASADA = 'Atrasada',
+}
+
+export interface Payment {
+  id: string;
+  date: string;
+  amount: number;
+  method?: string;
+  notes?: string;
+}
+
+export interface Installment {
+  id: string;
+  installmentNumber: number;
+  dueDate: string;
+  value: number;
+  paidAmount: number;
+  status: InstallmentStatus;
+  paymentHistory: Payment[];
+}
+
+export interface AgreementUpdate {
+  id: string;
+  text: string;
+  timestamp: string;
+  updatedAt?: string;
 }
 
 export interface DebtorAgreement {
@@ -113,26 +178,49 @@ export interface DebtorAgreement {
     caseNumberLink?: string; // N do processo
     originalDebt: number;
     agreementValue: number;
-    installments: number; // numero de parcelas
-    installmentsPaid: number;
-    nextDueDate?: string;
+    installments: Installment[];
     status: 'Ativo' | 'Quitado' | 'Inadimplente';
     notes?: string;
+    feePercentage: number; // Honorários do advogado sobre o valor pago
+    isDeleted?: boolean;
+    isArchived?: boolean;
+    updates?: AgreementUpdate[];
 }
 
 export interface AppSettings {
   customLogo?: string; // base64 string
+  customFavicon?: string; // base64 string
   userName?: string; 
-  primaryColor?: string;
-  accentColor?: string;
-  splashScreenBackgroundColor?: string;
   privacyModeEnabled?: boolean; 
   googleCalendarConnected?: boolean;
+  splashScreenBackgroundColor?: string;
 }
 
-export interface User {
-  id:string;
-  username: string; 
+export enum ContractStatus {
+  DRAFT = 'Rascunho',
+  ACTIVE = 'Ativo',
+  FINISHED = 'Finalizado',
+  CANCELED = 'Cancelado',
+}
+
+export interface Contract {
+  id: string;
+  name: string;
+  caseId: string;
+  clientId: string;
+  contractType: ContractType;
+  status: ContractStatus;
+  value?: number;
+  successFeePercentage?: number;
+  startDate: string;
+  endDate?: string;
+  description?: string;
+  isDeleted?: boolean;
+  isArchived?: boolean;
+  createdAt: string;
+  attachmentName?: string;
+  attachmentMimeType?: string;
+  attachmentData?: string; // base64
 }
 
 export interface JobObservation {
@@ -162,6 +250,7 @@ export interface Job {
   observationsLog?: JobObservation[];
   createCalendarEvent?: boolean;
   createdAt: string;
+  paymentNotes?: string;
 }
 
 export interface DraftNote {
